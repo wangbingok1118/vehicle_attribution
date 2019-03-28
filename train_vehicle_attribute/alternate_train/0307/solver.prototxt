@@ -1,0 +1,17 @@
+net: "/workspace/mnt/group/general-reg/wangbingbing/vehicle_workshop/vehicle_github_repo/train_vehicle_attribute_repo/model_net_files/0227/train.prototxt"
+test_initialization: false
+test_iter: 85
+test_interval: 5000
+display: 20
+average_loss: 20
+base_lr: 0.001
+lr_policy: "fixed"
+power: 1.0
+max_iter: 250000
+momentum: 0.9
+weight_decay: 0.0001
+snapshot: 5000
+snapshot_prefix: "/workspace/mnt/group/general-reg/wangbingbing/vehicle_workshop/vehicle_github_repo/train_vehicle_attribute_repo/save_models/vehicle_attribute_168"
+#solver_mode: GPU
+
+
