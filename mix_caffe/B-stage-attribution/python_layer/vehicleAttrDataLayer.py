@@ -5,9 +5,7 @@ sys.path.append('/opt/caffe/python')
 import caffe
 import numpy as np
 import random
-import cPickle as pickle
 import os
-import os.path as osp
 
 def centerCrop(im, crop_size):
     h,w = im.shape[:2]
@@ -23,7 +21,7 @@ def RondomRotate(image, max_angle):
     c_x =  w / 2
     c_y =  h / 2
     angle = np.random.randint(-max_angle, max_angle)
-    M = cv2.getRotationMatrix2D((c_x, c_y), angle, 1)   
+    M = cv2.getRotationMatrix2D((c_x, c_y), angle, 1)
     roate_img = cv2.warpAffine(image, M, (w, h))
     return roate_img
 
@@ -71,7 +69,7 @@ class Data_Layer_train(caffe.Layer):
 
     def setup(self, bottom, top):
 #	print 'bottom is:',bottom
-        if len(top) != 4: # 3 (attribute numbers)  + 1 
+        if len(top) != 4: # 3 (attribute numbers)  + 1
             raise Exception("Need to define tops (data, label)")
         if len(bottom) != 0:
             raise Exception("Do not define a bottom")
@@ -80,11 +78,15 @@ class Data_Layer_train(caffe.Layer):
         self.transform_params = params['transform_param']
         self.crop_size = self.transform_params['crop_size'] # tuple (168,168)
         self.mirror = None if 'mirror' not in self.transform_params else self.transform_params['mirror']
-        self.image_data_param = params['image_data_param'] 
+        self.image_data_param = params['image_data_param']
         self.batch_size = self.image_data_param['batch_size']
         self.new_image_size = None if 'new_image_size' not in self.image_data_param  else self.image_data_param['new_image_size'] # tuple (192,192)
-        self.imgLabelList = readSrcFile(root_folder=self.image_data_param['root_folder'],\
+        if 'root_folder' in self.image_data_param:
+            self.imgLabelList = readSrcFile(root_folder=self.image_data_param['root_folder'],\
             source=self.image_data_param['source'])
+        else:
+            self.imgLabelList = readSrcFile(root_folder=None, \
+                                    source=self.image_data_param['source'])
         self._cur = 0  # use this to check if we need to restart the list of images
         self.data_aug_type = ["normal"]
         if self.mirror == None:
@@ -128,19 +130,17 @@ class Data_Layer_train(caffe.Layer):
         # normalization
         image = image.transpose((2, 0, 1))
         if 'mean_value' in self.transform_params:
-            print('mean_value')
-            mean = self.transform_params['mean_value'] # list 
+            mean = self.transform_params['mean_value'] # list
             for i in range(3):
                 image[i,:,:] += mean[i]
         if 'scale' in self.transform_params:
-            print('scale')
             scale = self.transform_params['scale']
             image *= scale
         return image, labelList
 
     # mirror, illumination, mirror+illumination
     def data_augment(self, image):
-        image = RondomRotate(image,self.max_rotate_angle) 
+        image = RondomRotate(image,self.max_rotate_angle)
         image = centerCrop(image,self.crop_size)
         # choose a type of data augment
         idx = random.randint(0, len(self.data_aug_type) - 1)
